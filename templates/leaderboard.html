@@ -1,0 +1,38 @@
+<!-- templates/leaderboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classifica Pokémon</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; background: #fff; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Classifica Mondiale Pokémon</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Allenatore</th>
+            <th>Tempo di Gioco</th>
+            <th># Pokémon</th>
+            <th>Pokémon</th>
+        </tr>
+        {% for user in classifica %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.trainer_name }}</td>
+            <td>{{ user.play_time }}</td>
+            <td>{{ user.num_pokemon }}</td>
+            <td>
+                {% for poke in user.pokemon %}
+                    {{ poke.name }} (Lv. {{ poke.level }})<br>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
