@@ -1,18 +1,30 @@
 from flask import Flask, request, jsonify, render_template
-import json
-import os
+import requests
 
 app = Flask(__name__)
 
-CLASSIFICA_PATH = "data/classifica.json"
+API_KEY = '$2a$10$hazJKeTX19uYe/C8hmrEVeJSfbBh94NdWVshdehPNFRSrhWxQS4wq'
+BIN_ID = '6874d2216063391d31ad4b68'
 
-# Assicurati che la cartella 'data' esista
-os.makedirs("data", exist_ok=True)
+HEADERS = {
+    'Content-Type': 'application/json',
+    'X-Master-Key': API_KEY
+}
 
-# Assicurati che il file classifica.json esista
-if not os.path.exists(CLASSIFICA_PATH):
-    with open(CLASSIFICA_PATH, "w") as f:
-        json.dump([], f)
+def get_classifica():
+    url = f'https://api.jsonbin.io/v3/b/{BIN_ID}/latest'
+    response = requests.get(url, headers=HEADERS)
+    if response.status_code == 200:
+        data = response.json()
+        # La struttura di jsonbin ha i dati in data['record']
+        return data.get('record', [])
+    else:
+        return []
+
+def save_classifica(classifica):
+    url = f'https://api.jsonbin.io/v3/b/{BIN_ID}'
+    response = requests.put(url, headers=HEADERS, json=classifica)
+    return response.status_code == 200
 
 @app.route('/upload', methods=['POST'])
 def upload_data():
@@ -34,40 +46,35 @@ def upload_data():
         ]
     }
 
-    with open(CLASSIFICA_PATH, "r+") as f:
-        classifica = json.load(f)
+    classifica = get_classifica()
 
-        # Cerca se esiste già un record con lo stesso ID, aggiorna o aggiungi
-        found = False
-        for i, entry_in_list in enumerate(classifica):
-            if entry_in_list["id"] == client_id:
-                classifica[i] = entry
-                found = True
-                break
-        if not found:
-            classifica.append(entry)
+    found = False
+    for i, entry_in_list in enumerate(classifica):
+        if entry_in_list.get("id") == client_id:
+            classifica[i] = entry
+            found = True
+            break
+    if not found:
+        classifica.append(entry)
 
-        f.seek(0)
-        f.truncate()
-        json.dump(classifica, f, indent=4)
-
-    return jsonify({"message": "Dati caricati!", "id": client_id}), 200
+    success = save_classifica(classifica)
+    if success:
+        return jsonify({"message": "Dati caricati!", "id": client_id}), 200
+    else:
+        return jsonify({"error": "Errore nel salvataggio"}), 500
 
 @app.route('/classifica', methods=['GET'])
 def show_classifica():
-    with open(CLASSIFICA_PATH) as f:
-        classifica = json.load(f)
-    
-    # Aggiungiamo un punteggio basato su num_pokemon e somma livelli
-    for entry in classifica:
-        total_level = sum(p["level"] for p in entry["pokemon"])
-        entry["score"] = entry["num_pokemon"] * 1000 + total_level  # Peso maggiore al numero di pokemon
-    
-    # Ordiniamo per score decrescente
-    classifica.sort(key=lambda x: x["score"], reverse=True)
-    
-    return render_template("leaderboard.html", classifica=classifica)
+    classifica = get_classifica()
 
+    # Calcola punteggio
+    for entry in classifica:
+        total_level = sum(p.get("level", 0) for p in entry.get("pokemon", []))
+        entry["score"] = entry.get("num_pokemon", 0) * 1000 + total_level
+
+    classifica.sort(key=lambda x: x["score"], reverse=True)
+
+    return render_template("leaderboard.html", classifica=classifica)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
