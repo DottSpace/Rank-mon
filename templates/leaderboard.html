@@ -1,13 +1,87 @@
-<!-- templates/leaderboard.html -->
 <!DOCTYPE html>
 <html>
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
     <title>Classifica Pokémon</title>
     <style>
-        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
-        h1 { color: #333; }
-        table { border-collapse: collapse; width: 100%; background: #fff; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        body {
+            font-family: 'Press Start 2P', cursive;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #222;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d62828;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px #fcbf49;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffffdd;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 12px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #3b4cca;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-size: 12px;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #e6f2ff;
+        }
+
+        .pokemon-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pokemon-entry {
+            background-color: #a8a878;
+            color: #222;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .show-more-btn {
+            background: #ffcb05;
+            border: none;
+            color: #3b4cca;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 6px;
+            margin-top: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .show-more-btn:hover {
+            background: #f5b700;
+        }
     </style>
 </head>
 <body>
@@ -27,12 +101,26 @@
             <td>{{ user.play_time }}</td>
             <td>{{ user.num_pokemon }}</td>
             <td>
-                {% for poke in user.pokemon %}
-                    {{ poke.name }} (Lv. {{ poke.level }})<br>
-                {% endfor %}
+                <div class="pokemon-list" id="pokemon-list-{{ loop.index }}">
+                    {% for poke in user.pokemon %}
+                        <span class="pokemon-entry" style="{% if loop.index > 5 %}display:none{% endif %}">{{ poke.name }} (Lv. {{ poke.level }})</span>
+                    {% endfor %}
+                    {% if user.pokemon|length > 5 %}
+                        <button class="show-more-btn" onclick="toggleMore(this)">Mostra Altro</button>
+                    {% endif %}
+                </div>
             </td>
         </tr>
         {% endfor %}
     </table>
+
+    <script>
+        function toggleMore(button) {
+            const list = button.parentElement;
+            const hidden = list.querySelectorAll('.pokemon-entry[style*="display:none"]');
+            hidden.forEach(el => el.style.display = 'block');
+            button.style.display = 'none';
+        }
+    </script>
 </body>
 </html>
