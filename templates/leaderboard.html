@@ -18,6 +18,20 @@
             text-shadow: 2px 2px #fcbf49;
         }
 
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            font-size: 12px;
+            width: 300px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-family: 'Press Start 2P', cursive;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -86,32 +100,43 @@
 </head>
 <body>
     <h1>Rankèmon</h1>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Allenatore</th>
-            <th>Tempo di Gioco</th>
-            <th># Pokémon</th>
-            <th>Pokémon</th>
-        </tr>
-        {% for user in classifica %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.trainer_name }}</td>
-            <td>{{ user.play_time }}</td>
-            <td>{{ user.num_pokemon }}</td>
-            <td>
-                <div class="pokemon-list" id="pokemon-list-{{ loop.index }}">
-                    {% for poke in user.pokemon %}
-                        <span class="pokemon-entry" style="{% if loop.index > 5 %}display:none{% endif %}">{{ poke.name }} (Lv. {{ poke.level }})</span>
-                    {% endfor %}
-                    {% if user.pokemon|length > 5 %}
-                        <button class="show-more-btn" onclick="toggleMore(this)">Mostra Altro</button>
-                    {% endif %}
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
+
+    <div class="search-container">
+        <input class="search-input" type="text" id="searchInput" onkeyup="searchTable()" placeholder="Cerca per nome o ID...">
+    </div>
+
+    <table id="rankTable">
+        <thead>
+            <tr>
+                <th>Posizione</th>
+                <th>ID</th>
+                <th>Allenatore</th>
+                <th>Tempo di Gioco</th>
+                <th># Pokémon</th>
+                <th>Pokémon</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in classifica %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ user.id }}</td>
+                <td>{{ user.trainer_name }}</td>
+                <td>{{ user.play_time }}</td>
+                <td>{{ user.num_pokemon }}</td>
+                <td>
+                    <div class="pokemon-list" id="pokemon-list-{{ loop.index }}">
+                        {% for poke in user.pokemon %}
+                            <span class="pokemon-entry" style="{% if loop.index > 5 %}display:none{% endif %}">{{ poke.name }} (Lv. {{ poke.level }})</span>
+                        {% endfor %}
+                        {% if user.pokemon|length > 5 %}
+                            <button class="show-more-btn" onclick="toggleMore(this)">Mostra Altro</button>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 
     <script>
@@ -120,6 +145,26 @@
             const hidden = list.querySelectorAll('.pokemon-entry[style*="display:none"]');
             hidden.forEach(el => el.style.display = 'block');
             button.style.display = 'none';
+        }
+
+        function searchTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            const table = document.getElementById("rankTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdId = tr[i].getElementsByTagName("td")[1];
+                const tdName = tr[i].getElementsByTagName("td")[2];
+                if (tdId && tdName) {
+                    const txtValueId = tdId.textContent || tdId.innerText;
+                    const txtValueName = tdName.textContent || tdName.innerText;
+                    if (txtValueId.toLowerCase().includes(input) || txtValueName.toLowerCase().includes(input)) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
         }
     </script>
 </body>
